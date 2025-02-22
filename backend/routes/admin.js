@@ -42,7 +42,7 @@ router.post("/shifts", async (req, res) => {
   try {
     const { adminId, employeeId, date, startTime, endTime, timeZone } =
       req.body;
-    console.log(employeeId);
+    console.log(employeeId, "This is the empID");
     if (!mongoose.Types.ObjectId.isValid(employeeId)) {
       return res.status(400).json({ error: "Invalid Employee ID format." });
     }

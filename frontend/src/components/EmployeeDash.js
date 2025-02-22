@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { jwtDecode } from "jwt-decode";
 
 export default function EmployeeDashboard() {
   const [shifts, setShifts] = useState([]);
@@ -8,26 +9,43 @@ export default function EmployeeDashboard() {
     endTime: "",
   });
 
+  const token = localStorage.getItem("token");
+  const decodedToken = token ? jwtDecode(token) : null;
+  const userId = decodedToken ? decodedToken.id : null;
+  console.log(userId);
+
   useEffect(() => {
-    fetch("http://localhost:5000/api/employee/shifts", {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    if (!userId) {
+      console.error("User ID not found in token.");
+      return;
+    }
+
+    console.log("Trying to fetch shifts");
+    fetch(`http://localhost:5000/api/employee/shifts?userId=${userId}`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+      credentials: "include",
     })
-      .then((res) => res.json())
-      .then((data) => setShifts(data))
-      .catch((err) => console.error("Error fetching shifts:", err)); // Debugging
-  }, []);
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        console.log("Fetched shifts:", data);
+        setShifts(data);
+      })
+      .catch((err) => console.error("Error fetching shifts:", err));
+  }, [userId]);
 
   const handleAvailabilitySubmit = async (e) => {
     e.preventDefault();
 
-    const userId = localStorage.getItem("userId"); // Ensure the correct employee ID is sent
-
-    const availabilityData = {
-      ...availability,
-      userId, // Send user ID with request
-    };
-
-    console.log("Submitting Availability:", availabilityData); // Debugging log
+    if (!userId) {
+      alert("User ID not found. Please log in again.");
+      return;
+    }
 
     const response = await fetch(
       "http://localhost:5000/api/employee/availability",
@@ -35,24 +53,28 @@ export default function EmployeeDashboard() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(availabilityData),
+        body: JSON.stringify({ ...availability, userId }),
       }
     );
 
     const data = await response.json();
-    console.log("Availability API Response:", data); // Debugging log
-
     if (response.ok) {
       alert("Availability added successfully");
-      setAvailability({ date: "", startTime: "", endTime: "" }); // Reset form
+      setAvailability({ date: "", startTime: "", endTime: "" });
 
-      // Refresh availability in UI
-      fetch("http://localhost:5000/api/employee/shifts", {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      fetch(`http://localhost:5000/api/employee/shifts?userId=${userId}`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
       })
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error(`HTTP error! Status: ${res.status}`);
+          }
+          return res.json();
+        })
         .then((data) => setShifts(data))
         .catch((err) => console.error("Error fetching updated shifts:", err));
     } else {
@@ -63,7 +85,6 @@ export default function EmployeeDashboard() {
   return (
     <div style={{ padding: "20px" }}>
       <h2>Employee Dashboard</h2>
-
       <h3>Assigned Shifts</h3>
       <ul>
         {shifts.length > 0 ? (
@@ -76,7 +97,6 @@ export default function EmployeeDashboard() {
           <p>No shifts assigned yet.</p>
         )}
       </ul>
-
       <h3>Add Availability</h3>
       <form onSubmit={handleAvailabilitySubmit}>
         <input

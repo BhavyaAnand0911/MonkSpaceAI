@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function Login({ setToken, setRole }) {
+export default function Login({ setAuthenticated, setRole, setUserId }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
@@ -16,9 +16,9 @@ export default function Login({ setToken, setRole }) {
     const data = await response.json();
     if (response.ok) {
       localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.user.role);
-      setToken(data.token);
       setRole(data.user.role);
+      setUserId(data.user._id);
+      setAuthenticated(true);
       navigate(
         data.user.role === "admin" ? "/admin-dashboard" : "/employee-dashboard"
       );
@@ -28,27 +28,23 @@ export default function Login({ setToken, setRole }) {
   };
 
   return (
-    <div style={{ textAlign: "center", padding: "20px" }}>
+    <div>
       <h2>Login</h2>
       <form onSubmit={handleSubmit}>
         <input
           type="email"
-          placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
           required
         />
-        <br />
-        <br />
         <input
           type="password"
-          placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          placeholder="Password"
           required
         />
-        <br />
-        <br />
         <button type="submit">Login</button>
       </form>
     </div>

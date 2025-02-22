@@ -1,5 +1,4 @@
-import React from "react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Route,
@@ -14,27 +13,33 @@ import AdminDashboard from "./components/AdminDash";
 import Navbar from "./components/Navbar";
 
 function App() {
-  const [token, setToken] = useState(localStorage.getItem("token"));
-  const [role, setRole] = useState(localStorage.getItem("role"));
+  const [authenticated, setAuthenticated] = useState(false);
+  const [role, setRole] = useState(null);
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
-    const handleStorageChange = () => {
-      setToken(localStorage.getItem("token"));
-      setRole(localStorage.getItem("role"));
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decoded = JSON.parse(atob(token.split(".")[1]));
+        setRole(decoded.role);
+        setUserId(decoded.id);
+        setAuthenticated(true);
+      } catch (error) {
+        console.error("Invalid token", error);
+        localStorage.removeItem("token");
+      }
+    }
   }, []);
 
   return (
     <Router>
-      {token && <Navbar />}
+      {authenticated && <Navbar />}
       <Routes>
         <Route
           path="/"
           element={
-            token ? (
+            authenticated ? (
               <Navigate
                 to={
                   role === "admin" ? "/admin-dashboard" : "/employee-dashboard"
@@ -47,18 +52,34 @@ function App() {
         />
         <Route
           path="/login"
-          element={<Login setToken={setToken} setRole={setRole} />}
+          element={
+            <Login
+              setAuthenticated={setAuthenticated}
+              setRole={setRole}
+              setUserId={setUserId}
+            />
+          }
         />
         <Route path="/register" element={<Register />} />
         <Route
           path="/employee-dashboard"
           element={
-            role === "employee" ? <EmployeeDashboard /> : <Navigate to="/" />
+            authenticated && role === "employee" ? (
+              <EmployeeDashboard userId={userId} />
+            ) : (
+              <Navigate to="/" />
+            )
           }
         />
         <Route
           path="/admin-dashboard"
-          element={role === "admin" ? <AdminDashboard /> : <Navigate to="/" />}
+          element={
+            authenticated && role === "admin" ? (
+              <AdminDashboard />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
         />
       </Routes>
     </Router>
