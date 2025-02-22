@@ -2,7 +2,7 @@ const express = require("express");
 const Shift = require("../models/Shifts.model");
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.get("/shifts", async (req, res) => {
   try {
     const shifts = await Shift.find()
       .populate("adminId")
