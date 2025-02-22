@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User.model");
 const Shift = require("../models/Shifts.model");
 const Availability = require("../models/Availibility.model");
-const moment = require("moment-timezone"); // Ensure moment-timezone is installed
+const moment = require("moment-timezone");
 
 const router = express.Router();
 

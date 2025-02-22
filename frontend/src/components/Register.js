@@ -1,12 +1,15 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import moment from "moment-timezone";
 
 export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("employee");
-  const [timeZone, setTimeZone] = useState("");
+  const [timeZone, setTimeZone] = useState(
+    Intl.DateTimeFormat().resolvedOptions().timeZone
+  );
   const navigate = useNavigate();
 
   const styles = {
@@ -60,6 +63,7 @@ export default function Register() {
     },
   };
 
+  console.log(moment.tz.names());
   const handleSubmit = async (e) => {
     e.preventDefault();
     const response = await fetch("http://localhost:5000/api/auth/register", {
@@ -124,16 +128,19 @@ export default function Register() {
             <option value="admin">Admin</option>
           </select>
         </div>
-
         <div style={styles.formGroup}>
-          <input
-            style={styles.input}
-            type="text"
-            placeholder="Time Zone (e.g., America/New_York)"
+          <select
+            style={styles.select}
             value={timeZone}
             onChange={(e) => setTimeZone(e.target.value)}
             required
-          />
+          >
+            {moment.tz.names().map((tz) => (
+              <option key={tz} value={tz}>
+                {tz}
+              </option>
+            ))}
+          </select>
         </div>
 
         <button style={styles.button} type="submit">
