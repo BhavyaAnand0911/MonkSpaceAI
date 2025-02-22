@@ -9,6 +9,7 @@ export default function EmployeeDashboard() {
     startTime: "",
     endTime: "",
   });
+  const [error, setError] = useState("");
 
   const token = localStorage.getItem("token");
   const decodedToken = token ? jwtDecode(token) : null;
@@ -33,7 +34,7 @@ export default function EmployeeDashboard() {
       .then((data) => setShifts(data))
       .catch((err) => console.error("Error fetching shifts:", err));
 
-    // Fetch user's availability
+    // Fetch availabilities
     fetch(`http://localhost:5000/api/employee/availability/user/${userId}`, {
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },
@@ -47,11 +48,47 @@ export default function EmployeeDashboard() {
       .catch((err) => console.error("Error fetching availability:", err));
   }, [userId]);
 
+  // Validate if the time difference is at least 4 hours
+  const validateFourHours = (startTime, endTime) => {
+    const start = new Date(`2000-01-01T${startTime}`);
+    const end = new Date(`2000-01-01T${endTime}`);
+    const diffHours = (end - start) / (1000 * 60 * 60);
+    return diffHours >= 4;
+  };
+
+  // Check if the date is within the current week (Sunday to Saturday)
+  const isDateInCurrentWeek = (dateStr) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const sunday = new Date(now.setDate(now.getDate() - now.getDay()));
+    sunday.setHours(0, 0, 0, 0);
+    const saturday = new Date(sunday);
+    saturday.setDate(saturday.getDate() + 6);
+    saturday.setHours(23, 59, 59, 999);
+
+    return date >= sunday && date <= saturday;
+  };
+
   const handleAvailabilitySubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
     if (!userId) {
-      alert("User ID not found. Please log in again.");
+      setError("User ID not found. Please log in again.");
+      return;
+    }
+
+    // Validate minimum 4 hours
+    if (!validateFourHours(availability.startTime, availability.endTime)) {
+      setError("Availability must be for at least four hours.");
+      return;
+    }
+
+    // Validate if date is in current week
+    if (!isDateInCurrentWeek(availability.date)) {
+      setError(
+        "Please select a date within the current week (Sunday to Saturday)."
+      );
       return;
     }
 
@@ -72,35 +109,23 @@ export default function EmployeeDashboard() {
       alert("Availability added successfully");
       setAvailability({ date: "", startTime: "", endTime: "" });
 
-      // Refresh availabilities after adding new one
+      // Refresh availabilities
       fetch(`http://localhost:5000/api/employee/availability/user/${userId}`, {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
         credentials: "include",
       })
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+          return res.json();
+        })
         .then((data) => setAvailabilities(data))
         .catch((err) =>
           console.error("Error fetching updated availability:", err)
         );
     } else {
-      alert(`Error: ${data.error}`);
+      setError(data.error);
     }
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return {
-      dayName: date.toLocaleDateString("en-US", { weekday: "long" }),
-      date: date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      }),
-    };
-  };
-
-  const sortAvailabilities = (availabilities) => {
-    return availabilities.sort((a, b) => new Date(a.date) - new Date(b.date));
   };
 
   return (
@@ -120,47 +145,10 @@ export default function EmployeeDashboard() {
         )}
       </ul>
 
-      <h3>Your Availability Schedule</h3>
-      <div style={{ overflowX: "auto", marginBottom: "20px" }}>
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            marginBottom: "20px",
-          }}
-        >
-          <thead>
-            <tr>
-              <th style={tableHeaderStyle}>Day</th>
-              <th style={tableHeaderStyle}>Date</th>
-              <th style={tableHeaderStyle}>Time Range</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sortAvailabilities(availabilities).map((avail, index) => {
-              const { dayName, date } = formatDate(avail.date);
-              return (
-                <tr key={index}>
-                  <td style={tableCellStyle}>{dayName}</td>
-                  <td style={tableCellStyle}>{date}</td>
-                  <td style={tableCellStyle}>
-                    {avail.startTime} - {avail.endTime}
-                  </td>
-                </tr>
-              );
-            })}
-            {availabilities.length === 0 && (
-              <tr>
-                <td colSpan="3" style={tableCellStyle}>
-                  No availability set
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
       <h3>Add Availability</h3>
+      {error && (
+        <div style={{ color: "red", marginBottom: "10px" }}>{error}</div>
+      )}
       <form onSubmit={handleAvailabilitySubmit} style={formStyle}>
         <div style={formGroupStyle}>
           <label>Date:</label>
@@ -202,25 +190,48 @@ export default function EmployeeDashboard() {
           Submit
         </button>
       </form>
+
+      <h3>Current Availability</h3>
+      <div style={{ overflowX: "auto" }}>
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            marginTop: "20px",
+          }}
+        >
+          <thead>
+            <tr>
+              <th style={tableHeaderStyle}>Date</th>
+              <th style={tableHeaderStyle}>Time Range</th>
+            </tr>
+          </thead>
+          <tbody>
+            {availabilities.map((avail, index) => (
+              <tr key={index}>
+                <td style={tableCellStyle}>
+                  {new Date(avail.date).toLocaleDateString("en-US", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </td>
+                <td style={tableCellStyle}>
+                  {avail.startTime} - {avail.endTime}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
-const tableHeaderStyle = {
-  backgroundColor: "#f4f4f4",
-  padding: "12px",
-  borderBottom: "2px solid #ddd",
-  textAlign: "left",
-};
-
-const tableCellStyle = {
-  padding: "12px",
-  borderBottom: "1px solid #ddd",
-};
-
 const formStyle = {
   maxWidth: "500px",
-  margin: "0 auto",
+  margin: "20px 0",
 };
 
 const formGroupStyle = {
@@ -243,4 +254,16 @@ const buttonStyle = {
   border: "none",
   borderRadius: "4px",
   cursor: "pointer",
+};
+
+const tableHeaderStyle = {
+  backgroundColor: "#f4f4f4",
+  padding: "12px",
+  borderBottom: "2px solid #ddd",
+  textAlign: "left",
+};
+
+const tableCellStyle = {
+  padding: "12px",
+  borderBottom: "1px solid #ddd",
 };
