@@ -1,5 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
 
 const User = require("../models/User.model");
 const Shift = require("../models/Shifts.model");
@@ -101,6 +102,34 @@ router.post("/shifts", async (req, res) => {
 
     await shift.save();
     res.status(201).json({ message: "Shift assigned successfully", shift });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get("/profile", async (req, res) => {
+  try {
+    // Extract token from the Authorization header
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      return res
+        .status(401)
+        .json({ error: "Unauthorized. No token provided." });
+    }
+
+    // Verify token and extract user ID
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+
+    // Find the admin user with this ID
+    const admin = await User.findOne({ _id: userId, role: "admin" });
+
+    if (!admin) {
+      return res.status(404).json({ error: "Admin not found." });
+    }
+
+    // Return the admin's name
+    res.json({ name: admin.name });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

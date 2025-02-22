@@ -21,6 +21,11 @@ const styles = {
     color: "#1a1a1a",
     margin: "0 0 8px 0",
   },
+  adminName: {
+    fontSize: "16px",
+    color: "#4a5568",
+    marginTop: "4px",
+  },
   sectionTitle: {
     fontSize: "18px",
     fontWeight: "500",
@@ -114,6 +119,7 @@ export default function AdminDashboard() {
   const [employees, setEmployees] = useState([]);
   const [availableEmployees, setAvailableEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState("");
+  const [adminName, setAdminName] = useState("");
   const [shift, setShift] = useState({
     date: "",
     startTime: "",
@@ -122,7 +128,37 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchEmployees();
+    fetchAdminName();
   }, []);
+  const fetchAdminName = async () => {
+    try {
+      console.log("Trying to fetch admin name...");
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        console.error("No token found. User might not be logged in.");
+        return;
+      }
+
+      const response = await fetch("http://localhost:5000/api/admin/profile", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (data.name) {
+        setAdminName(data.name);
+        console.log(data.name, "This is admin name debug log");
+      } else {
+        console.warn("No admin name received from the server.");
+      }
+    } catch (error) {
+      console.error("Error fetching admin name:", error.message);
+    }
+  };
 
   const fetchEmployees = async () => {
     try {
@@ -230,6 +266,7 @@ export default function AdminDashboard() {
       <div style={styles.card}>
         <div style={styles.header}>
           <h1 style={styles.title}>Admin Dashboard</h1>
+          <div style={styles.adminName}>Administrator: {adminName}</div>
         </div>
 
         <div>
