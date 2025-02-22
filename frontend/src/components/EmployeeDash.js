@@ -56,17 +56,17 @@ export default function EmployeeDashboard() {
     return diffHours >= 4;
   };
 
-  // Check if the date is within the current week (Sunday to Saturday)
-  const isDateInCurrentWeek = (dateStr) => {
+  // Check if the date is within the next 7 days
+  const isDateInNextSevenDays = (dateStr) => {
     const date = new Date(dateStr);
-    const now = new Date();
-    const sunday = new Date(now.setDate(now.getDate() - now.getDay()));
-    sunday.setHours(0, 0, 0, 0);
-    const saturday = new Date(sunday);
-    saturday.setDate(saturday.getDate() + 6);
-    saturday.setHours(23, 59, 59, 999);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    return date >= sunday && date <= saturday;
+    const sevenDaysFromNow = new Date(today);
+    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+    sevenDaysFromNow.setHours(23, 59, 59, 999);
+
+    return date >= today && date <= sevenDaysFromNow;
   };
 
   const handleAvailabilitySubmit = async (e) => {
@@ -84,11 +84,9 @@ export default function EmployeeDashboard() {
       return;
     }
 
-    // Validate if date is in current week
-    if (!isDateInCurrentWeek(availability.date)) {
-      setError(
-        "Please select a date within the current week (Sunday to Saturday)."
-      );
+    // Validate if date is in next 7 days
+    if (!isDateInNextSevenDays(availability.date)) {
+      setError("Please select a date within the next 7 days from today.");
       return;
     }
 

@@ -56,25 +56,31 @@ const styles = {
     fontSize: "12px",
     color: "#718096",
   },
+  availabilityTime: {
+    fontSize: "14px",
+  },
+  notAvailable: {
+    fontSize: "14px",
+    color: "#a0aec0",
+  },
   form: {
     display: "flex",
     flexDirection: "column",
     gap: "16px",
   },
-  inputGroup: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gap: "16px",
-    marginBottom: "16px",
-  },
-  input: {
+  select: {
     width: "100%",
     padding: "8px",
     border: "1px solid #e2e8f0",
     borderRadius: "4px",
     fontSize: "14px",
   },
-  select: {
+  inputGroup: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, 1fr)",
+    gap: "16px",
+  },
+  input: {
     width: "100%",
     padding: "8px",
     border: "1px solid #e2e8f0",
@@ -104,50 +110,40 @@ const styles = {
     color: "#a0aec0",
     textAlign: "center",
   },
-  disabledButton: {
-    backgroundColor: "#cbd5e0",
-    cursor: "not-allowed",
-  },
 };
 
 export default function AdminDashboard() {
   const [employees, setEmployees] = useState([]);
-  const [availableEmployees, setAvailableEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState("");
-  const [shift, setShift] = useState({
-    date: "",
-    startTime: "",
-    endTime: "",
-  });
+  const [availableEmployees, setAvailableEmployees] = useState([]);
+  const [shift, setShift] = useState({ date: "", startTime: "", endTime: "" });
+  const [timeZone, setTimeZone] = useState("UTC");
 
   useEffect(() => {
-    fetchEmployees();
+    // Add debug log
+    console.log("Fetching availability data...");
+
+    fetch("http://localhost:5000/api/admin/availability", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Received data from API:", data);
+        setEmployees(data);
+      })
+      .catch((err) => console.error("Error fetching availability:", err));
   }, []);
-
-  const fetchEmployees = async () => {
-    try {
-      const response = await fetch(
-        "http://localhost:5000/api/admin/availability",
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      );
-      const data = await response.json();
-      setEmployees(data);
-    } catch (error) {
-      console.error("Error fetching employees:", error);
-    }
-  };
-
   useEffect(() => {
     if (shift.date && shift.startTime && shift.endTime) {
       const available = employees.filter((emp) => {
         const matchingAvailability = emp.availability.find((avail) => {
+          // Convert dates to same format for comparison
           const availDate = new Date(avail.date).toDateString();
           const shiftDate = new Date(shift.date).toDateString();
 
           if (availDate !== shiftDate) return false;
 
+          // Check if shift time falls within availability
           return (
             avail.startTime <= shift.startTime && avail.endTime >= shift.endTime
           );
@@ -155,10 +151,14 @@ export default function AdminDashboard() {
         return matchingAvailability;
       });
 
+      // Sort by availability start time
+      available.sort((a, b) => {
+        const aTime = a.availability[0]?.startTime || "";
+        const bTime = b.availability[0]?.startTime || "";
+        return aTime.localeCompare(bTime);
+      });
+
       setAvailableEmployees(available);
-      setSelectedEmployee("");
-    } else {
-      setAvailableEmployees([]);
     }
   }, [shift, employees]);
 
@@ -166,7 +166,7 @@ export default function AdminDashboard() {
     e.preventDefault();
 
     if (!selectedEmployee) {
-      alert("Please select an employee.");
+      alert("Please select a valid employee.");
       return;
     }
 
@@ -191,8 +191,6 @@ export default function AdminDashboard() {
 
       if (response.ok) {
         alert("Shift assigned successfully");
-        setShift({ date: "", startTime: "", endTime: "" });
-        setSelectedEmployee("");
       } else {
         alert(`Error: ${data.error}`);
       }
@@ -200,19 +198,6 @@ export default function AdminDashboard() {
       console.error("Error assigning shift:", error);
       alert("Failed to assign shift. Please try again.");
     }
-  };
-
-  const getNextSevenDays = () => {
-    const dates = [];
-    const today = new Date();
-
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      dates.push(date);
-    }
-
-    return dates;
   };
 
   const formatDateForComparison = (date) => {
@@ -223,7 +208,46 @@ export default function AdminDashboard() {
     )}-${String(d.getDate()).padStart(2, "0")}`;
   };
 
-  const nextSevenDays = getNextSevenDays();
+  const getCurrentWeekDates = () => {
+    const today = new Date();
+    const currentDay = today.getDay();
+    const dates = [];
+
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - currentDay + i);
+      dates.push(date);
+    }
+
+    return dates;
+  };
+
+  const weekDates = getCurrentWeekDates();
+
+  const checkAvailability = (employeeAvailability, currentDate) => {
+    if (!employeeAvailability || !Array.isArray(employeeAvailability)) {
+      console.log("No availability data for employee");
+      return null;
+    }
+
+    const formattedCurrentDate = formatDateForComparison(currentDate);
+
+    // Debug log
+    console.log("Checking availability for date:", formattedCurrentDate);
+    console.log(
+      "Available dates:",
+      employeeAvailability.map((a) => formatDateForComparison(a.date))
+    );
+
+    const availability = employeeAvailability.find((avail) => {
+      const formattedAvailDate = formatDateForComparison(avail.date);
+      return formattedAvailDate === formattedCurrentDate;
+    });
+
+    return availability;
+  };
+
+  //const weekDates = getCurrentWeekDates();
 
   return (
     <div style={styles.container}>
@@ -233,81 +257,13 @@ export default function AdminDashboard() {
         </div>
 
         <div>
-          <h2 style={styles.sectionTitle}>Create and Assign Shift</h2>
-          <form onSubmit={handleShiftAssign} style={styles.form}>
-            <div style={styles.inputGroup}>
-              <input
-                type="date"
-                value={shift.date}
-                onChange={(e) => setShift({ ...shift, date: e.target.value })}
-                required
-                style={styles.input}
-                min={new Date().toISOString().split("T")[0]}
-              />
-              <input
-                type="time"
-                value={shift.startTime}
-                onChange={(e) =>
-                  setShift({ ...shift, startTime: e.target.value })
-                }
-                required
-                style={styles.input}
-              />
-              <input
-                type="time"
-                value={shift.endTime}
-                onChange={(e) =>
-                  setShift({ ...shift, endTime: e.target.value })
-                }
-                required
-                style={styles.input}
-              />
-            </div>
-
-            {shift.date && shift.startTime && shift.endTime && (
-              <select
-                value={selectedEmployee}
-                onChange={(e) => setSelectedEmployee(e.target.value)}
-                required
-                style={styles.select}
-              >
-                <option value="">Select Available Employee</option>
-                {availableEmployees.map((emp) => (
-                  <option key={emp._id} value={emp._id}>
-                    {emp.name}
-                  </option>
-                ))}
-              </select>
-            )}
-
-            <button
-              type="submit"
-              style={{
-                ...styles.button,
-                ...((!shift.date ||
-                  !shift.startTime ||
-                  !shift.endTime ||
-                  !selectedEmployee) &&
-                  styles.disabledButton),
-              }}
-              disabled={
-                !shift.date ||
-                !shift.startTime ||
-                !shift.endTime ||
-                !selectedEmployee
-              }
-            >
-              Assign Shift
-            </button>
-          </form>
-
-          <h2 style={styles.sectionTitle}>Next 7 Days Availability</h2>
+          <h2 style={styles.sectionTitle}>Employee Availability</h2>
           <div style={styles.tableContainer}>
             <table style={styles.table}>
               <thead>
                 <tr>
                   <th style={styles.th}>Employee</th>
-                  {nextSevenDays.map((date) => (
+                  {weekDates.map((date) => (
                     <th key={date.toISOString()} style={styles.th}>
                       <div style={styles.dayName}>
                         {date.toLocaleDateString("en-US", { weekday: "short" })}
@@ -323,16 +279,21 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {employees.map((employee) => (
-                  <tr key={employee._id}>
-                    <td style={styles.td}>{employee.name}</td>
-                    {nextSevenDays.map((date) => {
-                      const availability = employee.availability?.find(
-                        (a) =>
-                          formatDateForComparison(a.date) ===
-                          formatDateForComparison(date)
+                {employees.map((emp) => (
+                  <tr key={emp._id}>
+                    <td style={styles.td}>{emp.name}</td>
+                    {weekDates.map((date) => {
+                      // Debug log
+                      console.log(
+                        `Checking availability for ${
+                          emp.name
+                        } on ${formatDateForComparison(date)}`
                       );
 
+                      const availability = checkAvailability(
+                        emp.availability,
+                        date
+                      );
                       return (
                         <td key={date.toISOString()} style={styles.td}>
                           {availability ? (
@@ -349,6 +310,58 @@ export default function AdminDashboard() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          <div>
+            <h2 style={styles.sectionTitle}>Assign Shift</h2>
+            <form onSubmit={handleShiftAssign} style={styles.form}>
+              <select
+                onChange={(e) => setSelectedEmployee(e.target.value)}
+                required
+                style={styles.select}
+              >
+                <option value="">Select Employee</option>
+                {employees.map((emp) => (
+                  <option key={emp._id} value={emp._id}>
+                    {emp.name}
+                  </option>
+                ))}
+              </select>
+              <div style={styles.inputGroup}>
+                <input
+                  type="date"
+                  onChange={(e) => setShift({ ...shift, date: e.target.value })}
+                  required
+                  style={styles.input}
+                />
+                <input
+                  type="time"
+                  onChange={(e) =>
+                    setShift({ ...shift, startTime: e.target.value })
+                  }
+                  required
+                  style={styles.input}
+                />
+                <input
+                  type="time"
+                  onChange={(e) =>
+                    setShift({ ...shift, endTime: e.target.value })
+                  }
+                  required
+                  style={styles.input}
+                />
+              </div>
+              <button
+                type="submit"
+                style={styles.button}
+                onMouseOver={(e) =>
+                  (e.target.style.backgroundColor = "#2c5282")
+                }
+                onMouseOut={(e) => (e.target.style.backgroundColor = "#3182ce")}
+              >
+                Assign Shift
+              </button>
+            </form>
           </div>
         </div>
       </div>

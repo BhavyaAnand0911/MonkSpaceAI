@@ -6,6 +6,9 @@ const router = express.Router();
 const Shift = require("../models/Shifts.model");
 
 router.post("/availability", async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { date, startTime, endTime, userId } = req.body;
 
@@ -30,16 +33,35 @@ router.post("/availability", async (req, res) => {
       endTime,
     });
 
-    await availability.save();
-    res
-      .status(201)
-      .json({ message: "Availability saved successfully", availability });
+    await availability.save({ session });
+
+    await User.findByIdAndUpdate(
+      finalUserId,
+      {
+        $push: { availability: availability._id },
+      },
+      { session }
+    );
+    await session.commitTransaction();
+
+    const updatedUser = await User.findById(finalUserId)
+      .populate("availability")
+      .select("availability");
+
+    res.status(201).json({
+      message: "Availability saved successfully",
+      availability,
+      userAvailability: updatedUser.availability,
+    });
   } catch (err) {
+    await session.abortTransaction();
     console.error("Error adding availability:", err);
     res.status(500).json({ error: err.message });
+  } finally {
+    // End session
+    session.endSession();
   }
 });
-
 router.get("/shifts", async (req, res) => {
   try {
     console.log("Fetching shifts...");
