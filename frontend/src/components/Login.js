@@ -53,73 +53,72 @@ export default function Login({ setAuthenticated, setRole, setUserId }) {
           <button type="submit">Sign In</button>
         </form>
       </div>
-      <style>{`
+      <style jsx>{`
         .login-container {
           display: flex;
           justify-content: center;
           align-items: center;
           min-height: 100vh;
-          background-color: #f5f5f5;
-          padding: 20px;
+          background-color: #f3f4f6;
+          padding: 1rem;
         }
 
         .login-box {
-          background: white;
-          padding: 40px;
-          border-radius: 10px;
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
           width: 100%;
-          max-width: 400px;
+          max-width: 28rem;
+          background-color: white;
+          padding: 2rem;
+          border-radius: 0.5rem;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .login-box h2 {
-          margin: 0 0 30px;
+          font-size: 1.875rem;
+          font-weight: 600;
           text-align: center;
-          color: #333;
-          font-size: 28px;
+          color: #1f2937;
+          margin-bottom: 2rem;
+          margin-top: 0;
         }
 
         .form-group {
-          margin-bottom: 20px;
+          margin-bottom: 1.5rem;
         }
 
-        input {
-          width: 100%;
-          padding: 12px;
-          border: 2px solid #e1e1e1;
-          border-radius: 6px;
-          font-size: 16px;
-          transition: border-color 0.3s ease;
+        .form-group input {
+          width: 95%;
+          padding: 0.7rem;
+          border: 2px solid #e5e7eb;
+          border-radius: 0.5rem;
+          font-size: 1rem;
+        }
+
+        .form-group input:focus {
           outline: none;
-        }
-
-        input:focus {
-          border-color: #4a90e2;
+          border-color: #3b82f6;
         }
 
         button {
           width: 100%;
-          padding: 12px;
-          background-color: #4a90e2;
+          padding: 0.75rem;
+          margin-left: 1px;
+          background-color: #3b82f6;
           color: white;
           border: none;
-          border-radius: 6px;
-          font-size: 16px;
+          border-radius: 0.5rem;
+          font-size: 1rem;
+          font-weight: 500;
           cursor: pointer;
-          transition: background-color 0.3s ease;
+          transition: background-color 0.2s ease;
         }
 
         button:hover {
-          background-color: #357abd;
+          background-color: #2563eb;
         }
 
-        button:active {
-          transform: scale(0.98);
-        }
-
-        @media (max-width: 480px) {
+        @media (max-width: 640px) {
           .login-box {
-            padding: 20px;
+            padding: 1.5rem;
           }
         }
       `}</style>
