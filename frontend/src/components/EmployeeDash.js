@@ -137,7 +137,23 @@ export default function EmployeeDashboard() {
         {shifts.length > 0 ? (
           shifts.map((shift, index) => (
             <li key={index}>
-              {shift.date} - {shift.startTime} to {shift.endTime}
+              {new Date(shift.date).toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}{" "}
+              (From{" "}
+              {new Date(`2000-01-01T${shift.startTime}`).toLocaleTimeString(
+                "en-US",
+                { hour: "numeric", minute: "2-digit", hour12: true }
+              )}{" "}
+              to{" "}
+              {new Date(`2000-01-01T${shift.endTime}`).toLocaleTimeString(
+                "en-US",
+                { hour: "numeric", minute: "2-digit", hour12: true }
+              )}
+              )
             </li>
           ))
         ) : (
