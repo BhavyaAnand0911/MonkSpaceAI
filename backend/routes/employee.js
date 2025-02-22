@@ -61,5 +61,29 @@ router.get("/shifts", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+router.get("/availability/user/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: "Invalid user ID format." });
+    }
+
+    const availabilities = await Availability.find({ userId })
+      .sort({ date: 1 })
+      .select("date startTime endTime -_id");
+
+    if (!availabilities) {
+      return res
+        .status(404)
+        .json({ error: "No availability found for this user." });
+    }
+
+    res.json(availabilities);
+  } catch (err) {
+    console.error("Error fetching user availability:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 module.exports = router;
