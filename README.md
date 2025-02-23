@@ -27,7 +27,7 @@ MonkSpaceAI is a modern web application designed to streamline employee shift ma
 ### Backend Integration
 - RESTful API integration (using node/express js)
 - JWT token-based authentication
-- Real-time data synchronization
+- Real-time data synchronization by using MongoDB
 - Timezone support using Moment.js
 
 ## Components
