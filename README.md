@@ -136,9 +136,14 @@ node index.js
 - New availabilities are added by sending a POST request on api/employee/availability endpoint
 
 ## DEMO
+### Home page
 ![image](https://github.com/user-attachments/assets/c3cfc8ca-2b58-49ca-939c-9bf3ac472c57)
+### Register page
 ![image](https://github.com/user-attachments/assets/a546cca7-7a6e-44b1-866a-ba7c615895a2)
+### Login page
 ![image](https://github.com/user-attachments/assets/dd9f562b-caf3-4a31-b34e-fcce898e541c)
+### Admin Dashboard
 ![image](https://github.com/user-attachments/assets/c85d404f-196c-4d80-b505-0ead7f944d81)
+### Employee Dashboard
 ![image](https://github.com/user-attachments/assets/0902e87d-2ebd-4d82-a81a-274b2553ebe3)
 
