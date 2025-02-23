@@ -111,16 +111,15 @@ node index.js
 ## Development Guidelines
 
 ### Code Structure
-- Component-based architecture
+- Component-based three-tier architecture 
 - Separate routing logic
-- Centralized state management
 - Consistent styling approach
+- Deployment grade file structure and code structure 
 
 ## Security Features
-- JWT-based authentication
+- JWT-based authentication 
 - Role-based access control
-- Secure password handling
-- Protected routes
+- Secure password handling by hashing 
 
 ## Working
 ### API Endpoints
@@ -135,7 +134,7 @@ node index.js
 - Added availabilities are fetched by hitting api/employee/availability/user/${userId} endpoint
 - New availabilities are added by sending a POST request on api/employee/availability endpoint
 
-## DEMO
+## Project Demo
 ### Home page
 ![image](https://github.com/user-attachments/assets/c3cfc8ca-2b58-49ca-939c-9bf3ac472c57)
 ### Register page
