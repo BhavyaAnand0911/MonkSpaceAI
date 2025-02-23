@@ -3,7 +3,7 @@
 ## Overview
 MonkSpaceAI is a modern web application designed to streamline employee shift management and scheduling. The system provides separate interfaces for administrators and employees, allowing efficient shift planning and availability management.
 
-## Features
+## Business Features
 
 ### For Admins
 - View employee availability in an intuitive dashboard
@@ -66,13 +66,18 @@ git clone https://github.com/BhavyaAnand0911/MonkSpaceAI.git
 
 2. Install dependencies:
 ```bash
-cd MonkSpaceAI
+cd MonkSpaceAI/frontend
+npm install
+
+cd MonSpaceAI/backend
 npm install
 ```
 
 3. Start the development server:
 ```bash
 npm start
+
+node index.js
 ```
 
 ## Usage
