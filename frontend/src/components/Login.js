@@ -8,6 +8,7 @@ export default function Login({ setAuthenticated, setRole, setUserId }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // calling the api/auth/login API endpoint to authenticate and login the user
     const response = await fetch("http://localhost:5000/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -19,6 +20,7 @@ export default function Login({ setAuthenticated, setRole, setUserId }) {
       setRole(data.user.role);
       setUserId(data.user._id);
       setAuthenticated(true);
+      // as soon as the user is authenticated navigate to the respective dashboard RBAC
       navigate(
         data.user.role === "admin" ? "/admin-dashboard" : "/employee-dashboard"
       );

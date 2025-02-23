@@ -9,6 +9,8 @@ const moment = require("moment-timezone");
 
 dotenv.config();
 const app = express();
+
+// allowing the frontend URL/APIs to send requests to the backend
 const corsOptions = {
   origin: "http://localhost:3000",
   credentials: true,
@@ -17,6 +19,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// database connection
 mongoose
   .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,

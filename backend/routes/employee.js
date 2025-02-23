@@ -5,6 +5,7 @@ const User = require("../models/User.model");
 const router = express.Router();
 const Shift = require("../models/Shifts.model");
 
+// api/employee/availability API endpoint that creates a new availability for an employee then saves it and then again updates the user model to add the reference to that availability to the particular user
 router.post("/availability", async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -33,6 +34,7 @@ router.post("/availability", async (req, res) => {
       endTime,
     });
 
+    // new availability added
     await availability.save({ session });
 
     await User.findByIdAndUpdate(
@@ -44,6 +46,7 @@ router.post("/availability", async (req, res) => {
     );
     await session.commitTransaction();
 
+    // creating an updated user and adding the new availability to it
     const updatedUser = await User.findById(finalUserId)
       .populate("availability")
       .select("availability");
@@ -58,10 +61,11 @@ router.post("/availability", async (req, res) => {
     console.error("Error adding availability:", err);
     res.status(500).json({ error: err.message });
   } finally {
-    // End session
     session.endSession();
   }
 });
+
+// api/employee/shifts API endpoint that fetches all the shifts assigned to the currently logged in employee and responds with the same
 router.get("/shifts", async (req, res) => {
   try {
     console.log("Fetching shifts...");
@@ -83,6 +87,8 @@ router.get("/shifts", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// api/employee/availability/user/:userId API endpoint fetches all the availabilities for the currently logged in user using the userId from params and responds with that
 router.get("/availability/user/:userId", async (req, res) => {
   try {
     const { userId } = req.params;

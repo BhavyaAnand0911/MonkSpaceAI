@@ -17,6 +17,7 @@ function App() {
   const [role, setRole] = useState(null);
   const [userId, setUserId] = useState(null);
 
+  // fetching the access token from the local storage to grant ROLE BASED ACCESS CONTROL (if the token is found user is authenticated)
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -34,6 +35,7 @@ function App() {
 
   return (
     <Router>
+      {/* only if the user is authenticated the navbar will appear else no*/}
       {authenticated && <Navbar />}
       <Routes>
         <Route

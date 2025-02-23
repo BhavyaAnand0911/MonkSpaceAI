@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User.model");
 const router = express.Router();
 
+// api/auth/register API endpoint that takes name, email, password, role and timeZone as inputs and creates a new employee entry in thr DB
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password, role, timeZone } = req.body;
@@ -12,6 +13,7 @@ router.post("/register", async (req, res) => {
     //  user.password = hashedPassword;
     console.log(req.body);
     const salt = await bcrypt.genSalt(10);
+    // hashing the password before saving in the database
     const hashedPassword = await bcrypt.hash(password, salt);
     const user = new User({
       name,
@@ -28,6 +30,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
+// api/auth/login API endpoint that takes email and password as inputs and verifies and logs in the user
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;

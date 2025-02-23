@@ -9,10 +9,12 @@ const moment = require("moment-timezone");
 
 const router = express.Router();
 
+// function to convert the time zone
 const convertTimeZone = (time, fromZone, toZone) => {
   return moment.tz(time, "HH:mm", fromZone).tz(toZone).format("HH:mm");
 };
 
+// api/admin/availability API endpoint - which responds with an array of available employees
 router.get("/availability", async (req, res) => {
   try {
     const employees = await User.find({ role: "employee" }).populate(
@@ -24,7 +26,7 @@ router.get("/availability", async (req, res) => {
     }
 
     const formattedEmployees = employees.map((emp) => ({
-      _id: emp._id, // Ensure employee ID is sent
+      _id: emp._id,
       name: emp.name,
       availability: emp.availability.map((avail) => ({
         date: avail.date,
@@ -39,6 +41,7 @@ router.get("/availability", async (req, res) => {
   }
 });
 
+// api/admin/shifts API endpoint that creates new shifts and checks for any overlap while creating them
 router.post("/shifts", async (req, res) => {
   try {
     const { adminId, employeeId, date, startTime, endTime, timeZone } =
@@ -107,9 +110,9 @@ router.post("/shifts", async (req, res) => {
   }
 });
 
+// api/admin/profile API endpoint that responds with the currently logged in admin details using the access token stored in local storage
 router.get("/profile", async (req, res) => {
   try {
-    // Extract token from the Authorization header
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
       return res
@@ -121,14 +124,12 @@ router.get("/profile", async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id;
 
-    // Find the admin user with this ID
     const admin = await User.findOne({ _id: userId, role: "admin" });
 
     if (!admin) {
       return res.status(404).json({ error: "Admin not found." });
     }
 
-    // Return the admin's name
     res.json({ name: admin.name });
   } catch (err) {
     res.status(500).json({ error: err.message });

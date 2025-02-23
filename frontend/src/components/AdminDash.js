@@ -126,6 +126,7 @@ export default function AdminDashboard() {
     endTime: "",
   });
 
+  // calling the fucntions to fetch admin name and employees that are available as soon as the page gets loaded
   useEffect(() => {
     fetchEmployees();
     fetchAdminName();
@@ -139,7 +140,7 @@ export default function AdminDashboard() {
         console.error("No token found. User might not be logged in.");
         return;
       }
-
+      // calling the api/admin/profile API endpoint to fetch the details of the logged in admin such as name
       const response = await fetch("http://localhost:5000/api/admin/profile", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -163,6 +164,7 @@ export default function AdminDashboard() {
   const fetchEmployees = async () => {
     try {
       const response = await fetch(
+        // calling the api/admin/availability API endpoint to fetch all the available employees
         "http://localhost:5000/api/admin/availability",
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -177,6 +179,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (shift.date && shift.startTime && shift.endTime) {
+      // filtering the employees by matching the date of availability
       const available = employees.filter((emp) => {
         const matchingAvailability = emp.availability.find((avail) => {
           const availDate = new Date(avail.date).toDateString();
@@ -214,6 +217,7 @@ export default function AdminDashboard() {
     };
 
     try {
+      // calling api/admin/shifts API endpoint to send a POST request and store the shifsts for the available employees
       const response = await fetch("http://localhost:5000/api/admin/shifts", {
         method: "POST",
         headers: {

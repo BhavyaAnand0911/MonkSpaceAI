@@ -43,9 +43,10 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
+    // remove everything that is in the localstorage as soon as the user presses logout button
     localStorage.removeItem("token");
     localStorage.removeItem("role");
-    window.location.href = "/login";
+    window.location.href = "/";
   };
 
   // Function to handle hover state for links

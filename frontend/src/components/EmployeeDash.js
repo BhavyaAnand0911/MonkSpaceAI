@@ -11,6 +11,7 @@ export default function EmployeeDashboard() {
   });
   const [error, setError] = useState("");
 
+  // fetch and decode the access token from the localstorage to get the currently logged in user
   const token = localStorage.getItem("token");
   const decodedToken = token ? jwtDecode(token) : null;
   const userId = decodedToken ? decodedToken.id : null;
@@ -21,7 +22,7 @@ export default function EmployeeDashboard() {
       return;
     }
 
-    // Fetch shifts
+    // calling the api/employee/shifts?userId=${userId} API endpoint to fetch the assigned shits of the currently logged in user
     fetch(`http://localhost:5000/api/employee/shifts?userId=${userId}`, {
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },
@@ -34,7 +35,7 @@ export default function EmployeeDashboard() {
       .then((data) => setShifts(data))
       .catch((err) => console.error("Error fetching shifts:", err));
 
-    // Fetch availabilities
+    // calling the api/employee/availability/user/${userId} API endopoint to fetch the set availabilities of the currently logged in employee
     fetch(`http://localhost:5000/api/employee/availability/user/${userId}`, {
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },
@@ -78,19 +79,20 @@ export default function EmployeeDashboard() {
       return;
     }
 
-    // Validate minimum 4 hours
+    // Validate minimum 4 hours by calling the fucntion validateFourHours()
     if (!validateFourHours(availability.startTime, availability.endTime)) {
       setError("Availability must be for at least four hours.");
       return;
     }
 
-    // Validate if date is in next 7 days
+    // Validate if date is in next 7 days by calling the fucntion isDateInNextSevenDays()
     if (!isDateInNextSevenDays(availability.date)) {
       setError("Please select a date within the next 7 days from today.");
       return;
     }
 
     const response = await fetch(
+      // calling the api/employee/availability API endpoint to send a new availability for the current user (POST request)
       "http://localhost:5000/api/employee/availability",
       {
         method: "POST",
@@ -243,6 +245,7 @@ export default function EmployeeDashboard() {
   );
 }
 
+// defining CSS style variables
 const formStyle = {
   maxWidth: "500px",
   margin: "20px 0",

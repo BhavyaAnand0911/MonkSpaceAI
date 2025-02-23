@@ -63,9 +63,10 @@ export default function Register() {
     },
   };
 
-  console.log(moment.tz.names());
+  //console.log(moment.tz.names());
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // calling the api/auth/register API endpoint to register a new user
     const response = await fetch("http://localhost:5000/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
