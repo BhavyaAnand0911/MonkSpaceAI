@@ -75,8 +75,10 @@ npm install
 
 3. Start the development server:
 ```bash
+cd MonkSpaceAI/frontend
 npm start
 
+cd MonSpaceAI/backend
 node index.js
 ```
 
